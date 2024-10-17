@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Cooking App</string>
+    <string name="placeholder_search">Search</string>
+</resources>
