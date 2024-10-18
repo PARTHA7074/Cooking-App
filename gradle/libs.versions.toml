@@ -6,9 +6,15 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.6"
-activityCompose = "1.9.2"
-composeBom = "2024.04.01"
-windowSizeClass = "1.2.1"
+activityCompose = "1.9.3"
+composeBom = "2024.10.00"
+windowSizeClass = "1.3.0"
+
+retrofit = "2.9.0"
+okhttp3 = "4.10.0"
+gson = "2.10.1"
+coil = "2.3.0"
+runtimeLivedata = "1.7.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,7 +31,17 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-material3-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended"}
 windoSizeClass = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "windowSizeClass" }
+
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+okhttp3-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp3" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+
+runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

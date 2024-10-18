@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Cooking App</string>
     <string name="placeholder_search">Search</string>
+    <string name="whats_on_your_mind">What\' on your mind?</string>
+    <string name="recommendation">Recommendation</string>
+    <string name="rice">Rice items</string>
+    <string name="bottom_navigation_home">Cook</string>
+    <string name="bottom_navigation_profile">Preferences</string>
 </resources>
