@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,9 +60,13 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -104,35 +109,36 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun CookingApp(windowSize: WindowSizeClass, viewModel: MainActivityViewModel) {
+    val selectedIndex = rememberSaveable { mutableIntStateOf(-1) }
     when (windowSize.widthSizeClass) {
         WindowWidthSizeClass.Compact -> {
-            CookingAppPortrait(viewModel)
+            CookingAppPortrait(viewModel, selectedIndex)
         }
         WindowWidthSizeClass.Expanded -> {
-            CookingAppLandscape(viewModel)
+            CookingAppLandscape(viewModel, selectedIndex)
         }
     }
 }
 
 @Composable
-fun CookingAppPortrait(viewModel: MainActivityViewModel) {
+fun CookingAppPortrait(viewModel: MainActivityViewModel, selectedIndex: MutableIntState) {
     Scaffold(bottomBar = { BottomNavigation() }) { padding ->
-        HomeScreen(Modifier.padding(padding), viewModel)
+        HomeScreen(Modifier.padding(padding), viewModel, selectedIndex)
     }
 }
 
 @Composable
-fun CookingAppLandscape(viewModel: MainActivityViewModel){
+fun CookingAppLandscape(viewModel: MainActivityViewModel, selectedIndex: MutableIntState){
     Scaffold { padding ->
         Row {
             CookingNavigationRail()
-            HomeScreen(modifier = Modifier.padding(padding), viewModel = viewModel)
+            HomeScreen(modifier = Modifier.padding(padding), viewModel = viewModel, selectedIndex)
         }
     }
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainActivityViewModel) {
+fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainActivityViewModel, selectedIndex: MutableIntState) {
     val dishes by viewModel.dishes.observeAsState(initial = emptyList())
     val error by viewModel.error.observeAsState(initial = null)
 
@@ -143,7 +149,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainActivityViewModel) 
             WhatsOnYourMindRow()
         }
         HomeSection(title = R.string.recommendation) {
-            RecommendationRow(dishes = dishes)
+            RecommendationRow(dishes = dishes, selectedIndex = selectedIndex)
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -167,7 +173,8 @@ fun SearchBar(
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Search Icon"
+                contentDescription = "Search Icon",
+                tint = DarkBlue
             )
         },
         colors = TextFieldDefaults.colors(
@@ -257,22 +264,23 @@ fun WhatsOnYourMindCard(
 @Composable
 fun RecommendationRow(
     modifier: Modifier = Modifier,
-    dishes: List<Dish>
+    dishes: List<Dish>,
+    selectedIndex: MutableIntState
 ) {
     LazyRow(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        items(dishes){ item ->
-            RecommendationCard(item)
+        itemsIndexed(dishes){ index, item ->
+            RecommendationCard(item, index, selectedIndex)
         }
     }
 }
 
 @Composable
-fun RecommendationCard(dish: Dish) {
-    var isClicked by rememberSaveable { mutableStateOf(false) }
+fun RecommendationCard(dish: Dish, index: Int, selectedIndex: MutableIntState) {
+    var isClicked = index == selectedIndex.intValue
 
     // Colors based on the clicked state
     val backgroundColor = if (isClicked) DarkBlue else Color(0xfffafafc)
@@ -282,7 +290,10 @@ fun RecommendationCard(dish: Dish) {
         modifier = Modifier
             .width(180.dp)
             .padding(5.dp)
-            .clickable { isClicked = !isClicked }
+            .clickable {
+                isClicked = !isClicked
+                selectedIndex.intValue = if (isClicked) index else -1
+            }
             .shadow(8.dp, RoundedCornerShape(16.dp), clip = false),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
@@ -572,7 +583,7 @@ fun RecommendationsPreview() {
         dishId = "1",
         imageUrl = "https://nosh-assignment.s3.ap-south-1.amazonaws.com/jeera-rice.jpg",
         isPublished = true
-    ))
+    ), 0, remember { mutableIntStateOf(-1) })
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
@@ -592,11 +603,11 @@ fun NavigationRailPreview() {
 @Preview(widthDp = 360, heightDp = 640)
 @Composable
 fun CookingAppPortraitPreview() {
-    CookingAppPortrait(MainActivityViewModel())
+    CookingAppPortrait(MainActivityViewModel(), remember { mutableIntStateOf(-1) })
 }
 
 @Preview(widthDp = 640, heightDp = 360)
 @Composable
 fun CookingAppLandscapePreview() {
-    CookingAppLandscape(MainActivityViewModel())
+    CookingAppLandscape(MainActivityViewModel(), remember { mutableIntStateOf(-1)} )
 }
