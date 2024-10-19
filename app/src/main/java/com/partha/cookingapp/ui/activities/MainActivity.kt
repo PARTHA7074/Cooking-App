@@ -116,7 +116,7 @@ fun CookingApp(windowSize: WindowSizeClass, viewModel: MainActivityViewModel) {
     val selectedIndex = rememberSaveable { mutableIntStateOf(-1) }
     val showBottomSheet = rememberSaveable { mutableStateOf(false) }
 
-    if (showBottomSheet.value){
+    if (showBottomSheet.value and (selectedIndex.intValue != -1)){
         ScheduleCookingTimeBottomSheet(onDismissRequest = {
             showBottomSheet.value = false
         })
