@@ -1,6 +1,8 @@
 package com.partha.cookingapp.ui.activities
 
+import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -32,6 +34,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -44,6 +47,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -86,6 +91,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.partha.cookingapp.R
 import com.partha.cookingapp.pojos.Dish
@@ -131,6 +137,10 @@ fun CookingApp(windowSize: WindowSizeClass, viewModel: MainActivityViewModel) {
                 rescheduleDish.intValue++
             }, onDismissRequest = {
                 showBottomSheet.value = false
+            }, onCookNowClick = {
+                showNotImplementedToast(context)
+            }, onDeleteClick = {
+                showNotImplementedToast(context)
             }
         )
     }
@@ -191,6 +201,7 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainActivityViewModel, 
             RecommendationRow(dishes = dishes, selectedIndex = selectedIndex, showBottomSheet = showBottomSheet)
         }
         Spacer(modifier = Modifier.height(16.dp))
+        DishButtonsRow()
     }
 }
 
@@ -232,6 +243,8 @@ fun HeaderForLandscape(
     modifier: Modifier = Modifier,
     scheduleDish: MutableState<Dish?> = mutableStateOf(null)
 ) {
+    val context = LocalContext.current
+
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -245,7 +258,9 @@ fun HeaderForLandscape(
             modifier = Modifier,
             dishName = scheduleDish.value?.dishName ?: "Italian Spaghetti Pasta",
             dishImage = scheduleDish.value?.imageUrl,
-            scheduleTime = "Scheduled ${scheduleDish.value?.scheduleTime?: "6:30 AM"}"
+            scheduleTime = "Scheduled ${scheduleDish.value?.scheduleTime?: "6:30 AM"}",
+            onBellClick = { showNotImplementedToast(context) },
+            onPowerClick = { showNotImplementedToast(context) }
         )
     }
 }
@@ -469,7 +484,7 @@ fun RecommendationCard(dish: Dish, index: Int, selectedIndex: MutableIntState, s
                     )
                 }
 
-                // Rating Section - Centered at the bottom
+                // Rating Section
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -535,6 +550,52 @@ fun RecommendationCard(dish: Dish, index: Int, selectedIndex: MutableIntState, s
 }
 
 @Composable
+fun DishButtonsRow() {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp, horizontal = 40.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Button(
+            onClick = { showNotImplementedToast(context) },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFe78636)), // Example orange color
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 8.dp)
+                .height(60.dp)
+        ) {
+            Text(
+                text = "Explore all dishes",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Button(
+            onClick = { showNotImplementedToast(context) },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFe78636)),
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+                .height(60.dp)
+        ) {
+            Text(
+                text = "Confused what to cook?",
+                color = Color.White,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
 private fun BottomNavigation(modifier: Modifier = Modifier) {
     NavigationBar (
         modifier,
@@ -564,9 +625,10 @@ private fun BottomNavigation(modifier: Modifier = Modifier) {
 
 @Composable
 private fun CookingNavigationRail(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
     NavigationRail(
         modifier = modifier.padding(start = 8.dp, end = 8.dp),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color.White,
     ) {
         Column(
             modifier = modifier.fillMaxHeight(),
@@ -578,13 +640,13 @@ private fun CookingNavigationRail(modifier: Modifier = Modifier) {
                     Icon(
                         imageVector = Icons.Default.Spa,
                         contentDescription = null,
-                        tint = DarkBlue
+                        tint = Color(0xFFe78636)
                     )
                 },
                 label = {
                     Text(stringResource(
                         R.string.bottom_navigation_home),
-                        color = DarkBlue
+                        color = Color(0xFFe78636)
                     )
                 },
                 selected = true,
@@ -606,7 +668,7 @@ private fun CookingNavigationRail(modifier: Modifier = Modifier) {
                     )
                 },
                 selected = false,
-                onClick = {}
+                onClick = { showNotImplementedToast(context) }
             )
             Spacer(modifier = Modifier.height(5.dp))
             NavigationRailItem(
@@ -624,7 +686,7 @@ private fun CookingNavigationRail(modifier: Modifier = Modifier) {
                     )
                 },
                 selected = false,
-                onClick = {}
+                onClick = {showNotImplementedToast(context)}
             )
             Spacer(modifier = Modifier.height(5.dp))
             NavigationRailItem(
@@ -642,7 +704,7 @@ private fun CookingNavigationRail(modifier: Modifier = Modifier) {
                     )
                 },
                 selected = false,
-                onClick = {}
+                onClick = {showNotImplementedToast(context)}
             )
             Spacer(modifier = Modifier.height(5.dp))
             NavigationRailItem(
@@ -660,7 +722,7 @@ private fun CookingNavigationRail(modifier: Modifier = Modifier) {
                     )
                 },
                 selected = false,
-                onClick = {}
+                onClick = {showNotImplementedToast(context)}
             )
             Spacer(modifier = Modifier.height(5.dp))
             NavigationRailItem(
@@ -678,7 +740,7 @@ private fun CookingNavigationRail(modifier: Modifier = Modifier) {
                     )
                 },
                 selected = false,
-                onClick = {}
+                onClick = {showNotImplementedToast(context)}
             )
         }
     }
@@ -733,6 +795,12 @@ fun RecommendationsPreview() {
     ), 0, remember { mutableIntStateOf(-1) }, remember { mutableStateOf(false) })
 }
 
+@Preview(showBackground = true, widthDp = 980)
+@Composable
+fun DishButtonsRowPreview() {
+    DishButtonsRow()
+}
+
 @Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
 @Composable
 fun BottomNavigationPreview() {
@@ -757,4 +825,9 @@ fun CookingAppPortraitPreview() {
 @Composable
 fun CookingAppLandscapePreview() {
     CookingAppLandscape(MainActivityViewModel(), remember { mutableIntStateOf(-1)}, remember { mutableStateOf(false) })
+}
+
+fun showNotImplementedToast(context: Context) {
+    Toast.makeText(context, "Not implemented", Toast.LENGTH_SHORT).show()
+
 }
