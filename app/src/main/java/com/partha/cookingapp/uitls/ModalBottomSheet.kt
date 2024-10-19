@@ -154,7 +154,7 @@ fun ScheduleCookingTimeSelector(
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(20.dp)
+        horizontalArrangement = Arrangement.spacedBy(40.dp)
     ) {
         TimePicker()
 
@@ -179,7 +179,7 @@ fun TimePicker() {
         horizontalArrangement = Arrangement.Center
     ) {
         InfiniteCircularList(
-            width = 90.dp,
+            width = 95.dp,
             itemHeight = 35.dp,
             numberOfDisplayedItems = 3,
             items = (1..12).toList(),
@@ -196,7 +196,7 @@ fun TimePicker() {
             color = DarkBlue
         )
         InfiniteCircularList(
-            width = 90.dp,
+            width = 95.dp,
             itemHeight = 40.dp,
             numberOfDisplayedItems = 3,
             items = (1..60).toList(),
