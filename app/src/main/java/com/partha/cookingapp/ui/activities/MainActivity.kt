@@ -9,6 +9,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,7 +35,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AvTimer
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
@@ -76,6 +80,7 @@ import coil.compose.AsyncImage
 import com.partha.cookingapp.R
 import com.partha.cookingapp.pojos.Dish
 import com.partha.cookingapp.ui.theme.CookingAppTheme
+import com.partha.cookingapp.ui.theme.DarkBlue
 import com.partha.cookingapp.viewmodels.MainActivityViewModel
 
 
@@ -118,10 +123,10 @@ fun CookingAppPortrait(viewModel: MainActivityViewModel) {
 
 @Composable
 fun CookingAppLandscape(viewModel: MainActivityViewModel){
-    Surface(color = MaterialTheme.colorScheme.background) {
+    Scaffold { padding ->
         Row {
             CookingNavigationRail()
-            HomeScreen(viewModel = viewModel)
+            HomeScreen(modifier = Modifier.padding(padding), viewModel = viewModel)
         }
     }
 }
@@ -152,6 +157,11 @@ fun SearchBar(
     var searchText by rememberSaveable { mutableStateOf("") }
 
     TextField(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .clip(CircleShape)
+            .border(1.dp, DarkBlue, CircleShape),
         value = searchText,
         onValueChange = { searchText = it },
         leadingIcon = {
@@ -166,12 +176,10 @@ fun SearchBar(
         ),
         placeholder = {
             Text(stringResource(R.string.placeholder_search))
-        },
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 56.dp)
+        }
     )
 }
+
 
 @Composable
 fun HomeSection(
@@ -183,7 +191,7 @@ fun HomeSection(
         Text(
             text = stringResource(id = title),
             style = MaterialTheme.typography.titleMedium,
-            color = Color(0xFF3B4E9B),
+            color = DarkBlue,
             modifier = Modifier
                 .paddingFromBaseline(top = 40.dp, bottom = 16.dp)
                 .padding(horizontal = 16.dp)
@@ -238,7 +246,7 @@ fun WhatsOnYourMindCard(
             Text(
                 text = itemName,
                 style = MaterialTheme.typography.titleMedium,
-                color = Color(0xFF3B4E9B),
+                color = DarkBlue,
                 modifier = Modifier.padding(start = 10.dp, end = 16.dp)
             )
         }
@@ -267,7 +275,7 @@ fun RecommendationCard(dish: Dish) {
     var isClicked by rememberSaveable { mutableStateOf(false) }
 
     // Colors based on the clicked state
-    val backgroundColor = if (isClicked) Color(0xFF3B4E9B) else Color(0xfffafafc)
+    val backgroundColor = if (isClicked) DarkBlue else Color(0xfffafafc)
     val textColor = if (isClicked) Color.White else Color.Black
 
     Card(
@@ -342,7 +350,7 @@ fun RecommendationCard(dish: Dish) {
                 text = dish.dishName?:"NA",
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
-                color = if (isClicked) textColor else Color(0xFF3B4E9B),
+                color = if (isClicked) textColor else DarkBlue,
                 modifier = Modifier
                     .padding(start = 4.dp, end = 4.dp, top = 15.dp, bottom = 5.dp)
                     .fillMaxWidth(),
@@ -415,25 +423,105 @@ private fun CookingNavigationRail(modifier: Modifier = Modifier) {
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Spa,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = DarkBlue
                     )
                 },
                 label = {
-                    Text(stringResource(R.string.bottom_navigation_home))
+                    Text(stringResource(
+                        R.string.bottom_navigation_home),
+                        color = DarkBlue
+                    )
                 },
                 selected = true,
                 onClick = {}
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(5.dp))
+            NavigationRailItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = DarkBlue
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Favorites",
+                        color = DarkBlue
+                    )
+                },
+                selected = false,
+                onClick = {}
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+            NavigationRailItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Spa,
+                        contentDescription = null,
+                        tint = DarkBlue
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Manual",
+                        color = DarkBlue
+                    )
+                },
+                selected = false,
+                onClick = {}
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+            NavigationRailItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Devices,
+                        contentDescription = null,
+                        tint = DarkBlue
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Device",
+                        color = DarkBlue
+                    )
+                },
+                selected = false,
+                onClick = {}
+            )
+            Spacer(modifier = Modifier.height(5.dp))
             NavigationRailItem(
                 icon = {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = DarkBlue
                     )
                 },
                 label = {
-                    Text(stringResource(R.string.bottom_navigation_profile))
+                    Text(
+                        text = "Preferences",
+                        color = DarkBlue
+                    )
+                },
+                selected = false,
+                onClick = {}
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+            NavigationRailItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = null,
+                        tint = DarkBlue
+                    )
+                },
+                label = {
+                    Text(
+                        text = "Settings",
+                        color = DarkBlue
+                    )
                 },
                 selected = false,
                 onClick = {}
@@ -476,20 +564,15 @@ fun WhatsOnYourMindCardPreview() {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
+@Preview(showBackground = true)
 @Composable
-fun HomeSectionPreview() {
-    CookingAppTheme {
-        HomeSection(title = R.string.whats_on_your_mind){
-            RecommendationRow(dishes = emptyList())
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
-@Composable
-fun ScreenContentPreview() {
-    CookingAppTheme { HomeScreen(viewModel = MainActivityViewModel()) }
+fun RecommendationsPreview() {
+    RecommendationCard(Dish(
+        dishName = "Jeera Rice",
+        dishId = "1",
+        imageUrl = "https://nosh-assignment.s3.ap-south-1.amazonaws.com/jeera-rice.jpg",
+        isPublished = true
+    ))
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
@@ -516,15 +599,4 @@ fun CookingAppPortraitPreview() {
 @Composable
 fun CookingAppLandscapePreview() {
     CookingAppLandscape(MainActivityViewModel())
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RecommendationsPreview() {
-    RecommendationCard(Dish(
-        dishName = "Jeera Rice",
-        dishId = "1",
-        imageUrl = "https://nosh-assignment.s3.ap-south-1.amazonaws.com/jeera-rice.jpg",
-        isPublished = true
-    ))
 }
