@@ -1,7 +1,6 @@
 package com.partha.cookingapp.ui.activities
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -39,6 +38,8 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AvTimer
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Spa
@@ -46,13 +47,13 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -82,6 +83,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -89,7 +91,8 @@ import com.partha.cookingapp.R
 import com.partha.cookingapp.pojos.Dish
 import com.partha.cookingapp.ui.theme.CookingAppTheme
 import com.partha.cookingapp.ui.theme.DarkBlue
-import com.partha.cookingapp.uitls.ScheduleCookingTimeBottomSheet
+import com.partha.cookingapp.utils.ScheduleCookingTimeBottomSheet
+import com.partha.cookingapp.utils.SharedPrefManager
 import com.partha.cookingapp.viewmodels.MainActivityViewModel
 
 
@@ -115,11 +118,21 @@ class MainActivity : ComponentActivity() {
 fun CookingApp(windowSize: WindowSizeClass, viewModel: MainActivityViewModel) {
     val selectedIndex = rememberSaveable { mutableIntStateOf(-1) }
     val showBottomSheet = rememberSaveable { mutableStateOf(false) }
+    val rescheduleDish = rememberSaveable { mutableIntStateOf(0) }
+
+    val context = LocalContext.current
 
     if (showBottomSheet.value and (selectedIndex.intValue != -1)){
-        ScheduleCookingTimeBottomSheet(onDismissRequest = {
-            showBottomSheet.value = false
-        })
+        ScheduleCookingTimeBottomSheet(
+            onRescheduleClick = { selectedTime ->
+                val dish = viewModel.dishes.value?.get(selectedIndex.intValue)
+                dish?.scheduleTime = selectedTime
+                SharedPrefManager(context).saveDish(dish!!)
+                rescheduleDish.intValue++
+            }, onDismissRequest = {
+                showBottomSheet.value = false
+            }
+        )
     }
 
     when (windowSize.widthSizeClass) {
@@ -127,7 +140,7 @@ fun CookingApp(windowSize: WindowSizeClass, viewModel: MainActivityViewModel) {
             CookingAppPortrait(viewModel, selectedIndex, showBottomSheet)
         }
         WindowWidthSizeClass.Expanded -> {
-            CookingAppLandscape(viewModel, selectedIndex, showBottomSheet)
+            CookingAppLandscape(viewModel, selectedIndex, showBottomSheet, rescheduleDish)
         }
     }
 }
@@ -140,23 +153,37 @@ fun CookingAppPortrait(viewModel: MainActivityViewModel, selectedIndex: MutableI
 }
 
 @Composable
-fun CookingAppLandscape(viewModel: MainActivityViewModel, selectedIndex: MutableIntState, showBottomSheet: MutableState<Boolean>){
+fun CookingAppLandscape(viewModel: MainActivityViewModel, selectedIndex: MutableIntState, showBottomSheet: MutableState<Boolean>, rescheduleDish: MutableIntState? = null){
     Scaffold { padding ->
         Row {
             CookingNavigationRail()
-            HomeScreen(modifier = Modifier.padding(padding), viewModel = viewModel, selectedIndex, showBottomSheet)
+            HomeScreen(modifier = Modifier.padding(padding), viewModel = viewModel, selectedIndex, showBottomSheet, landscape = true, rescheduleDish)
         }
     }
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainActivityViewModel, selectedIndex: MutableIntState, showBottomSheet: MutableState<Boolean>) {
+fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainActivityViewModel, selectedIndex: MutableIntState, showBottomSheet: MutableState<Boolean>, landscape: Boolean = false, rescheduleDish: MutableIntState? = null) {
     val dishes by viewModel.dishes.observeAsState(initial = emptyList())
     val error by viewModel.error.observeAsState(initial = null)
 
+    val context = LocalContext.current
+    val scheduleDish = remember { mutableStateOf(SharedPrefManager(context).getDish()) }
+
+    LaunchedEffect(rescheduleDish?.intValue) {
+        if (selectedIndex.intValue != -1)
+            scheduleDish.value = viewModel.dishes.value?.get(selectedIndex.intValue)
+    }
+
     Column(modifier.verticalScroll(rememberScrollState())) {
         Spacer(modifier = Modifier.height(16.dp))
-        SearchBar(modifier = Modifier.padding(horizontal = 16.dp))
+        if (landscape) {
+            HeaderForLandscape(modifier = Modifier, scheduleDish)
+        } else {
+            SearchBar(modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp))
+        }
         HomeSection(title = R.string.whats_on_your_mind) {
             WhatsOnYourMindRow()
         }
@@ -167,7 +194,6 @@ fun HomeScreen(modifier: Modifier = Modifier, viewModel: MainActivityViewModel, 
     }
 }
 
-
 @Composable
 fun SearchBar(
     modifier: Modifier = Modifier
@@ -176,7 +202,6 @@ fun SearchBar(
 
     TextField(
         modifier = modifier
-            .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clip(CircleShape)
             .border(1.dp, DarkBlue, CircleShape),
@@ -194,10 +219,114 @@ fun SearchBar(
             focusedContainerColor = MaterialTheme.colorScheme.surface
         ),
         placeholder = {
-            Text(stringResource(R.string.placeholder_search))
+            Text(
+                modifier = Modifier,
+                text = stringResource(R.string.placeholder_search)
+            )
         }
     )
 }
+
+@Composable
+fun HeaderForLandscape(
+    modifier: Modifier = Modifier,
+    scheduleDish: MutableState<Dish?> = mutableStateOf(null)
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        SearchBar(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 8.dp)
+        )
+        HeaderContentExtraForLandscape(
+            modifier = Modifier,
+            dishName = scheduleDish.value?.dishName ?: "Italian Spaghetti Pasta",
+            dishImage = scheduleDish.value?.imageUrl,
+            scheduleTime = "Scheduled ${scheduleDish.value?.scheduleTime?: "6:30 AM"}"
+        )
+    }
+}
+
+@Composable
+fun HeaderContentExtraForLandscape(
+    modifier: Modifier = Modifier,
+    dishName: String = "Italian Spaghetti Pasta",
+    dishImage: String? = null,
+    scheduleTime: String = "Scheduled 6:30 AM",
+    onBellClick: () -> Unit = {},
+    onPowerClick: () -> Unit = {}
+) {
+    Row(
+        modifier = modifier
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .heightIn(min = 56.dp)
+                .background(Color(0xFF172a34), shape = CircleShape)
+                .padding(horizontal = 8.dp)
+        ) {
+            // Dish Image
+            AsyncImage(
+                model = dishImage ?: R.drawable.indian_food,
+                contentDescription = "Dish Image",
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(40.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Texts
+            Column (modifier = Modifier.padding(end = 4.dp)) {
+                Text(
+                    text = if (dishName.length > 17) dishName.take(17) + "..." else dishName,
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    modifier = Modifier.padding(end = 8.dp),
+                    text = scheduleTime,
+                    color = Color.White.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        // Bell Icon
+        IconButton(
+           modifier = Modifier.padding(start = 10.dp),
+            onClick = onBellClick
+        ) {
+            Icon(
+                imageVector = Icons.Default.NotificationsNone,
+                contentDescription = "Bell Icon",
+                tint = DarkBlue
+            )
+        }
+
+        // Power Icon
+        IconButton(
+            onClick = onPowerClick
+        ) {
+            Icon(
+                imageVector = Icons.Default.PowerSettingsNew,
+                contentDescription = "Power Icon",
+                tint = Color.Red
+            )
+        }
+    }
+}
+
 
 
 @Composable
@@ -295,11 +424,9 @@ fun RecommendationRow(
 fun RecommendationCard(dish: Dish, index: Int, selectedIndex: MutableIntState, showBottomSheet: MutableState<Boolean>) {
     var isClicked = index == selectedIndex.intValue
 
-
     // Colors based on the clicked state
     val backgroundColor = if (isClicked) DarkBlue else Color(0xfffafafc)
     val textColor = if (isClicked) Color.White else Color.Black
-
 
     Card(
         modifier = Modifier
@@ -577,7 +704,11 @@ fun SearchBarPreview() {
     CookingAppTheme { SearchBar(Modifier.padding(8.dp)) }
 }
 
-
+@Preview(showBackground = true, widthDp = 640, heightDp = 80)
+@Composable
+fun HeaderRowPreview() {
+    HeaderForLandscape()
+}
 
 @Preview(showBackground = true, backgroundColor = 0xFFF5F0EE)
 @Composable
@@ -622,7 +753,7 @@ fun CookingAppPortraitPreview() {
     CookingAppPortrait(MainActivityViewModel(), remember { mutableIntStateOf(-1) }, remember { mutableStateOf(false) })
 }
 
-@Preview(widthDp = 640, heightDp = 360)
+@Preview(widthDp = 940, heightDp = 460)
 @Composable
 fun CookingAppLandscapePreview() {
     CookingAppLandscape(MainActivityViewModel(), remember { mutableIntStateOf(-1)}, remember { mutableStateOf(false) })

@@ -14,5 +14,7 @@ data class Dish(
 	val imageUrl: String? = null,
 
 	@field:SerializedName("dishName")
-	val dishName: String? = null
+	val dishName: String? = null,
+
+	var scheduleTime: String? = null
 )

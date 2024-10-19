@@ -1,13 +1,11 @@
-package com.partha.cookingapp.uitls
+package com.partha.cookingapp.utils
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,6 +28,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -51,14 +50,14 @@ import kotlinx.coroutines.launch
 fun ScheduleCookingTimeBottomSheet(
     modifier: Modifier = Modifier,
     onDeleteClick: () -> Unit = {},
-    onRescheduleClick: () -> Unit = {},
+    onRescheduleClick: (selectedTime: String) -> Unit = {},
     onCookNowClick: () -> Unit = {},
-    selectedTime: String = "06:30",
     selectedPeriod: String = "AM",
     onDismissRequest: () -> Unit = {}
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
+    var selectedTime by remember { mutableStateOf("") }
 
     Scaffold { innerPadding ->
         ModalBottomSheet(
@@ -72,13 +71,15 @@ fun ScheduleCookingTimeBottomSheet(
             content = {
                 ScheduleCookingTimeContent(
                     onDeleteClick = onDeleteClick,
-                    onRescheduleClick = onRescheduleClick,
+                    onRescheduleClick = { onRescheduleClick(selectedTime) },
                     onCookNowClick = onCookNowClick,
-                    selectedTime = selectedTime,
                     selectedPeriod = selectedPeriod,
                     onCloseClick = {
                         coroutineScope.launch { sheetState.hide() }
                         onDismissRequest()
+                    },
+                    onTimeSelected = { selectedTime1 ->
+                        selectedTime =  selectedTime1
                     }
                 )
             }
@@ -93,10 +94,14 @@ fun ScheduleCookingTimeContent(
     onDeleteClick: () -> Unit = {},
     onRescheduleClick: () -> Unit = {},
     onCookNowClick: () -> Unit = {},
-    selectedTime: String = "06:30",
     selectedPeriod: String = "AM",
-    onCloseClick: () -> Unit = {}
+    onCloseClick: () -> Unit = {},
+    onTimeSelected: (String) -> Unit = {}
 ) {
+    var selectedHour by remember { mutableIntStateOf(6) }
+    var selectedMinute by remember { mutableIntStateOf(30) }
+    var selectedPeriodState by remember { mutableStateOf(selectedPeriod) }
+
     Column(
         modifier = Modifier
             .padding(horizontal = 10.dp)
@@ -106,13 +111,27 @@ fun ScheduleCookingTimeContent(
         ScheduleCookingTimeHeader(onCloseClick = onCloseClick)
 
         ScheduleCookingTimeSelector(
-            initialSelectedPeriod = selectedPeriod,
-            onPeriodChange = { /* Handle the selection change */ }
+            initialSelectedPeriod = selectedPeriodState,
+            onPeriodChange = {
+                selectedPeriodState = it
+                onTimeSelected("$selectedHour:${String.format("%02d", selectedMinute)} $selectedPeriodState")
+            },
+            onHourChange = { hour ->
+                selectedHour = hour-1
+                onTimeSelected("$selectedHour:${String.format("%02d", selectedMinute)} $selectedPeriodState")
+            },
+            onMinuteChange = { minute ->
+                selectedMinute = minute-1
+                onTimeSelected("$selectedHour:${String.format("%02d", selectedMinute)} $selectedPeriodState")
+            }
         )
 
         ScheduleCookingTimeActions(
             onDeleteClick = onDeleteClick,
-            onRescheduleClick = onRescheduleClick,
+            onRescheduleClick = {
+                onRescheduleClick()
+                onCloseClick()
+            },
             onCookNowClick = onCookNowClick
         )
     }
@@ -149,14 +168,19 @@ fun ScheduleCookingTimeHeader(onCloseClick: () -> Unit) {
 @Composable
 fun ScheduleCookingTimeSelector(
     initialSelectedPeriod: String = "AM",
-    onPeriodChange: (String) -> Unit = {}
+    onPeriodChange: (String) -> Unit = {},
+    onHourChange: (Int) -> Unit = {},
+    onMinuteChange: (Int) -> Unit = {}
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(40.dp)
     ) {
-        TimePicker()
+        TimePicker(
+            onHourChange = onHourChange,
+            onMinuteChange = onMinuteChange
+        )
 
         AMPMToggle(
             modifier = Modifier,
@@ -166,8 +190,12 @@ fun ScheduleCookingTimeSelector(
     }
 }
 
+
 @Composable
-fun TimePicker() {
+fun TimePicker(
+    onHourChange: (Int) -> Unit = {},
+    onMinuteChange: (Int) -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .padding(10.dp)
@@ -188,7 +216,9 @@ fun TimePicker() {
             textStyle = TextStyle(fontSize = 20.sp),
             textColor = Color(0x993B4E9B),
             selectedTextColor = DarkBlue,
-            onItemSelected = { index, item -> /* Handle item selection */ }
+            onItemSelected = { index, item ->
+                onHourChange(item)
+            }
         )
         Text(
             text = ":",
@@ -199,13 +229,15 @@ fun TimePicker() {
             width = 95.dp,
             itemHeight = 40.dp,
             numberOfDisplayedItems = 3,
-            items = (1..60).toList(),
+            items = (0..59).toList(),
             initialItem = 30,
             itemScaleFact = 1.5f,
             textStyle = TextStyle(fontSize = 20.sp),
             textColor = Color(0x993B4E9B),
             selectedTextColor = DarkBlue,
-            onItemSelected = { index, item -> /* Handle item selection */ }
+            onItemSelected = { index, item ->
+                onMinuteChange(item)
+            }
         )
     }
 }
